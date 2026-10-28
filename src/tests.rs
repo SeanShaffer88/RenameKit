@@ -504,7 +504,7 @@ fn collision_in_plan_and_case_insensitive() {
     let rules = r#"[{"type":"case","mode":"lower","scope":"both"}]"#;
     let spec_ci = format!(
         "{{\"dir\":\"{}\",\"files\":[\"UP.txt\"],\"rules\":{},\"case_insensitive_fs\":true}}",
-        td.0.display(),
+        json_escape(&td.0.display().to_string()),
         rules
     );
     // UP.txt -> up.txt; no clash in-plan alone. Now map two files
@@ -519,7 +519,7 @@ fn collision_in_plan_and_case_insensitive() {
     // Same plan with case_insensitive_fs:false -> targets differ.
     let spec_cs = format!(
         "{{\"dir\":\"{}\",\"files\":[\"UP.txt\",\"low.txt\"],\"rules\":{},\"case_insensitive_fs\":false}}",
-        td.0.display(),
+        json_escape(&td.0.display().to_string()),
         r#"[{"type":"replace","find":"UP","replace":"Same","scope":"name"},{"type":"replace","find":"low","replace":"SAME","scope":"name"}]"#
     );
     let p = json::parse(&preview_json(&spec_cs).unwrap()).unwrap();
@@ -615,7 +615,7 @@ fn apply_allow_partial() {
     td.write("taken.txt", "T");
     let spec = format!(
         "{{\"dir\":\"{}\",\"files\":[\"a.txt\",\"b.txt\"],\"allow_partial\":true,\"rules\":[{{\"type\":\"replace\",\"find\":\"a\",\"replace\":\"taken\",\"scope\":\"name\"}},{{\"type\":\"suffix\",\"text\":\"-new\"}}]}}",
-        td.0.display()
+        json_escape(&td.0.display().to_string())
     );
     // a -> taken-new.txt (no collision after suffix), b -> b-new.txt
     let log = json::parse(&engine::apply_json(&spec).unwrap()).unwrap();
@@ -625,7 +625,7 @@ fn apply_allow_partial() {
     td.write("c.txt", "C");
     let spec2 = format!(
         "{{\"dir\":\"{}\",\"files\":[\"b-new.txt\",\"c.txt\"],\"allow_partial\":true,\"rules\":[{{\"type\":\"replace\",\"find\":\"c\",\"replace\":\"taken\",\"scope\":\"name\"}}]}}",
-        td.0.display()
+        json_escape(&td.0.display().to_string())
     );
     let log = json::parse(&engine::apply_json(&spec2).unwrap()).unwrap();
     assert_eq!(log.get("ok").unwrap().as_bool(), Some(true));
@@ -786,20 +786,20 @@ fn spec_errors_are_parse_errors() {
     // duplicate JSON key
     let bad = format!(
         "{{\"dir\":\"{}\",\"dir\":\"{}\",\"files\":[\"a.txt\"]}}",
-        td.0.display(),
-        td.0.display()
+        json_escape(&td.0.display().to_string()),
+        json_escape(&td.0.display().to_string())
     );
     assert_eq!(preview_json(&bad).unwrap_err().0, ERR_PARSE);
     // unknown key
     let bad = format!(
         "{{\"dir\":\"{}\",\"files\":[\"a.txt\"],\"surprise\":1}}",
-        td.0.display()
+        json_escape(&td.0.display().to_string())
     );
     assert_eq!(preview_json(&bad).unwrap_err().0, ERR_PARSE);
     // both files and pattern
     let bad = format!(
         "{{\"dir\":\"{}\",\"files\":[\"a.txt\"],\"pattern\":\"*.txt\"}}",
-        td.0.display()
+        json_escape(&td.0.display().to_string())
     );
     assert_eq!(preview_json(&bad).unwrap_err().0, ERR_PARSE);
     // unknown rule type (and no regex_lite is offered)
@@ -808,7 +808,7 @@ fn spec_errors_are_parse_errors() {
     // path in a file name
     let bad = format!(
         "{{\"dir\":\"{}\",\"files\":[\"sub/a.txt\"]}}",
-        td.0.display()
+        json_escape(&td.0.display().to_string())
     );
     assert_eq!(preview_json(&bad).unwrap_err().0, ERR_PARSE);
     // missing directory
